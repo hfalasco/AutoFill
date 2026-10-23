@@ -1,0 +1,95 @@
+{
+  "_descricao": "Regras do preenchimento do certificado FO.GSM.LMI.07.01 a partir do FO.GSM.LMI.03.08. Edite aqui sem mexer no código.",
+  "validade_meses": 6,
+  "nome_arquivo_novo": "Vivência {ponto}.xlsx",
+  "origem_padrao": "Área de vivência",
+  "aceitavel": "Aceitável",
+  "nao_aceitavel": "Não aceitável",
+  "conferir": "Conferir",
+
+  "analises": {
+    "_descricao": "Colunas do FO.GSM.LMI.03.08. São localizadas pelo cabeçalho; a letra é usada só se o cabeçalho mudar de nome.",
+    "aba_preferida": "Análises",
+    "colunas": {
+      "data": {"cabecalho": ["data"], "letra": "A"},
+      "origem": {"cabecalho": ["origem"], "letra": "G"},
+      "identificacao": {"cabecalho": ["identificacao"], "letra": "N"},
+      "area": {"cabecalho": ["area"], "letra": "V"},
+      "setor": {"cabecalho": ["setor"], "letra": "AD"},
+      "cor": {"cabecalho": ["cor aparente"], "letra": "AK"},
+      "turbidez": {"cabecalho": ["turbidez"], "letra": "AQ"},
+      "ph": {"cabecalho": ["ph"], "letra": "AV"},
+      "cloro": {"cabecalho": ["cloro"], "letra": "BA"},
+      "coliformes": {"cabecalho": ["coliformes totais"], "letra": "BF"},
+      "ecoli": {"cabecalho": ["coliformes termotolerantes", "escherichia", "e. coli"], "letra": "BM"},
+      "rubrica": {"cabecalho": ["rubrica"], "letra": "BV"}
+    }
+  },
+
+  "certificado": {
+    "_descricao": "Células do FO.GSM.LMI.07.01 (formulário 'Vivência'). As linhas dos parâmetros são achadas pelo nome na coluna A.",
+    "celulas": {
+      "mes": "M6",
+      "ano": "X6",
+      "numero": "AK6",
+      "versao": "AY6",
+      "local": "O8",
+      "veiculo": "O10",
+      "ponto": "O12",
+      "data_amostragem": "O14",
+      "validade": "O16",
+      "coletor": "O18"
+    },
+    "coluna_nome_parametro": "A",
+    "coluna_resultado": "Y",
+    "coluna_vmp": "AJ",
+    "coluna_aceitavel": "AU",
+    "linhas_parametros": [20, 40]
+  },
+
+  "parametros": [
+    {
+      "id": "coliformes",
+      "nome": "Coliforme Totais",
+      "nomes_no_certificado": ["coliforme totais", "coliformes totais"],
+      "vmp": "Ausente em 100 mL",
+      "regra": {"tipo": "ausente"}
+    },
+    {
+      "id": "ecoli",
+      "nome": "Escherichia coli",
+      "nomes_no_certificado": ["escherichia coli", "e. coli", "coliformes termotolerantes"],
+      "vmp": "Ausente em 100 mL",
+      "regra": {"tipo": "ausente"}
+    },
+    {
+      "id": "cloro",
+      "nome": "Cloro residual livre CRL",
+      "nomes_no_certificado": ["cloro residual livre", "cloro"],
+      "vmp": "0,2 à 5,0",
+      "regra": {"tipo": "faixa", "minimo": 0.2, "maximo": 5.0}
+    },
+    {
+      "id": "turbidez",
+      "nome": "Turbidez",
+      "nomes_no_certificado": ["turbidez"],
+      "vmp": "Máx. 5.0 UT",
+      "regra": {"tipo": "faixa", "maximo": 5.0}
+    },
+    {
+      "id": "ph",
+      "nome": "pH",
+      "nomes_no_certificado": ["ph"],
+      "vmp": "-",
+      "regra": {"tipo": "faixa", "minimo": 6.0, "maximo": 9.0},
+      "_nota": "O formulário não traz VMP para pH; a faixa 6,0 a 9,0 é a recomendada pela Portaria GM/MS 888/2021 e só serve para marcar 'Aceitável'."
+    },
+    {
+      "id": "cor",
+      "nome": "Cor Aparente",
+      "nomes_no_certificado": ["cor aparente"],
+      "vmp": "Máx. 15 mg Pt/L",
+      "regra": {"tipo": "faixa", "maximo": 15}
+    }
+  ]
+}

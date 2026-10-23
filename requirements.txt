@@ -1,0 +1,5 @@
+streamlit>=1.50
+openpyxl>=3.1
+pandas>=2.0
+
+# O PDF de cada certificado sai do LibreOffice (packages.txt no Streamlit Cloud). Sem ele, só Excel.
