@@ -85,10 +85,11 @@ padrao = _periodo_padrao(analises)
 with st.sidebar:
     st.markdown("### 2. Certificados dos pontos")
     arquivos_pontos = st.file_uploader(
-        "Planilhas dos pontos (ex.: Vivência 417.xlsx) - pode enviar várias de uma vez",
-        type=["xlsx", "xlsm"],
+        "Planilhas dos pontos (ex.: Vivência 417.xlsx) ou o .zip baixado no mês anterior",
+        type=["xlsx", "xlsm", "zip"],
         accept_multiple_files=True,
-        help="Cada arquivo ganha uma aba nova com o certificado do mês, copiada da última aba.",
+        help="Cada planilha ganha uma aba nova com o certificado do mês, copiada da última aba. "
+        "Pode enviar várias de uma vez ou o .zip inteiro que a ferramenta gerou da última vez.",
     )
     texto_pontos = st.text_area(
         "Pontos sem planilha (criados do modelo)",
@@ -146,16 +147,22 @@ if analises.ignoradas:
 # ----------------------------------------------------------------------------- arquivos dos pontos
 arquivos = []
 chaves_vistas: dict[tuple[str, str], str] = {}
+planilhas_enviadas: list[tuple[str, bytes]] = []
 for enviado in arquivos_pontos or []:
+    extraidas, avisos_zip = exportacao.desempacotar(enviado.name, enviado.getvalue())
+    planilhas_enviadas += extraidas
+    for aviso in avisos_zip:
+        st.warning(aviso)
+for nome_enviado, conteudo_enviado in planilhas_enviadas:
     try:
-        arq = _arquivo(enviado.getvalue(), enviado.name)
+        arq = _arquivo(conteudo_enviado, nome_enviado)
     except CertificadoInvalido as erro:
         st.warning(str(erro))
         continue
     if arq.chave in chaves_vistas:
-        st.warning(f"{enviado.name}: mesmo ponto de {chaves_vistas[arq.chave]} ({arq.origem} {arq.identificacao}); ignorado.")
+        st.warning(f"{nome_enviado}: mesmo ponto de {chaves_vistas[arq.chave]} ({arq.origem} {arq.identificacao}); ignorado.")
         continue
-    chaves_vistas[arq.chave] = enviado.name
+    chaves_vistas[arq.chave] = nome_enviado
     arquivos.append(arq)
 
 for ponto in cert_svc.ler_lista_pontos(texto_pontos):

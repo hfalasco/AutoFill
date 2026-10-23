@@ -43,8 +43,8 @@ def estado_vazio() -> None:
              Em três passos, pela barra lateral:
              <ol>
                <li><b>FO.GSM.LMI.03.08</b> - Análises Microbiológicas de Água Potável;</li>
-               <li>as planilhas dos pontos (<i>Vivência 417.xlsx</i>, <i>Vivência 631.xlsx</i>...) e/ou os
-                   números dos pontos que ainda não têm planilha;</li>
+               <li>as planilhas dos pontos (<i>Vivência 417.xlsx</i>, <i>Vivência 631.xlsx</i>...) ou o
+                   <b>.zip do mês anterior</b>, e/ou os números dos pontos que ainda não têm planilha;</li>
                <li>o mês do certificado.</li>
              </ol><br>
              A ferramenta acha a coleta de cada ponto no mês, cria a aba nova do certificado

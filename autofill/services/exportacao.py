@@ -81,6 +81,59 @@ def gerar_lote(certificados: list[Certificado], com_pdf: bool = False) -> tuple[
     return planilhas, pdfs
 
 
+EXTENSOES_PLANILHA = (".xlsx", ".xlsm")
+MAX_ARQUIVOS_ZIP = 1000
+MAX_TAMANHO_ARQUIVO = 50 * 1024 * 1024  # descompactado, por planilha
+MAX_TAMANHO_ZIP = 1024 * 1024 * 1024  # descompactado, somando tudo
+
+
+def e_planilha_xlsx(conteudo: bytes) -> bool:
+    """Um .xlsx também é um zip: o que o diferencia é o [Content_Types].xml na raiz."""
+    try:
+        with zipfile.ZipFile(io.BytesIO(conteudo)) as z:
+            return "[Content_Types].xml" in z.namelist()
+    except zipfile.BadZipFile:
+        return False
+
+
+def desempacotar(nome: str, conteudo: bytes) -> tuple[list[tuple[str, bytes]], list[str]]:
+    """Planilhas de um envio: o próprio arquivo, ou as de dentro de um .zip (ex.: o do mês anterior).
+
+    Volta (lista de (nome, conteúdo), avisos). Dentro do zip valem só .xlsx/.xlsm; PDFs, pastas,
+    temporários do Excel (~$...) e lixo do macOS (__MACOSX) são ignorados.
+    """
+    if not nome.lower().endswith(".zip") or e_planilha_xlsx(conteudo):
+        return [(nome, conteudo)], []
+    try:
+        zip_enviado = zipfile.ZipFile(io.BytesIO(conteudo))
+    except zipfile.BadZipFile:
+        return [], [f"{nome}: o .zip está corrompido e não pôde ser aberto."]
+    planilhas: list[tuple[str, bytes]] = []
+    avisos: list[str] = []
+    total = 0
+    with zip_enviado:
+        for info in zip_enviado.infolist():
+            base = Path(info.filename).name
+            if (
+                info.is_dir()
+                or info.filename.startswith("__MACOSX/")
+                or base.startswith(("~$", "."))
+                or not base.lower().endswith(EXTENSOES_PLANILHA)
+            ):
+                continue
+            if len(planilhas) >= MAX_ARQUIVOS_ZIP:
+                avisos.append(f"{nome}: mais de {MAX_ARQUIVOS_ZIP} planilhas; o restante foi ignorado.")
+                break
+            if info.file_size > MAX_TAMANHO_ARQUIVO or total + info.file_size > MAX_TAMANHO_ZIP:
+                avisos.append(f"{nome}: {base} é grande demais e foi ignorado.")
+                continue
+            total += info.file_size
+            planilhas.append((base, zip_enviado.read(info)))
+    if not planilhas:
+        avisos.append(f"{nome}: nenhuma planilha .xlsx dentro do .zip.")
+    return planilhas, avisos
+
+
 def zipar(planilhas: dict[str, bytes], pdfs: dict[str, bytes] | None = None) -> bytes:
     saida = io.BytesIO()
     with zipfile.ZipFile(saida, "w", zipfile.ZIP_DEFLATED) as z:

@@ -9,12 +9,19 @@ regras fixas em `data/certificado.json`, sem IA.
 
 1. Carregue o FO.GSM.LMI.03.08 da safra (barra lateral, passo 1).
 2. Carregue as planilhas dos pontos — quantas quiser, de uma vez (ex.: *Vivência 417*, *631*,
-   *634*, *665*) — e/ou digite os números dos pontos que ainda não têm planilha (`631, 634, 665`
+   *634*, *665*), ou direto o **.zip baixado no mês anterior** — e/ou digite os números dos pontos que ainda não têm planilha (`631, 634, 665`
    ou faixas como `600-610`). Sem nada carregado, o botão **“Criar certificado para todos os
    pontos coletados no mês”** preenche a lista com todos os pontos da origem escolhida.
 3. Escolha o mês (vem pré-selecionado o da coleta mais recente).
 4. Confira a tabela (dá para ajustar Nº do certificado, coletor e desmarcar pontos) e clique em
    **Baixar tudo (.zip)**: uma planilha por ponto e, se houver LibreOffice, o PDF de cada certificado.
+
+### Todo mês, em 30 segundos
+
+O .zip que a ferramenta entrega serve de entrada no mês seguinte: atualize o FO.GSM.LMI.03.08,
+jogue-o no passo 1, jogue o .zip do mês anterior no passo 2, escolha o mês e baixe o .zip novo.
+Cada planilha ganha a aba do mês e as anteriores ficam como estavam. Dentro do .zip valem só as
+planilhas (.xlsx/.xlsm); a pasta `PDF/`, temporários do Excel (`~$...`) e `__MACOSX` são ignorados.
 
 ## O que é preenchido automaticamente
 

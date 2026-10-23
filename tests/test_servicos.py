@@ -1,7 +1,7 @@
 import io
 import re
 import zipfile
-from datetime import date
+from datetime import date, datetime
 from xml.dom import minidom
 
 import openpyxl
@@ -10,8 +10,9 @@ import pytest
 from autofill.model.config import carregar_config
 from autofill.services import certificado as svc
 from autofill.services.analises import PlanilhaInvalida, ler_analises
-from autofill.services.exportacao import gerar_lote, zipar
+from autofill.services.exportacao import desempacotar, gerar_lote, zipar
 from autofill.services.xlsx import PastaXlsx
+from tests.conftest import COLETAS, planilha_analises
 
 config = carregar_config()
 
@@ -187,3 +188,48 @@ def test_preparar_impressao_deixa_uma_aba_em_uma_pagina(certificado_417):
     folha = pasta._ler(pasta.aba("Outubro").caminho)
     assert '<pageSetUpPr fitToPage="1"/>' in folha
     assert all(a.oculta for a in pasta.abas() if a.nome != "Outubro")
+
+
+# --------------------------------------------------------------------------- .zip do mês anterior
+def _zip(arquivos: dict[str, bytes]) -> bytes:
+    saida = io.BytesIO()
+    with zipfile.ZipFile(saida, "w") as z:
+        for nome, dados in arquivos.items():
+            z.writestr(nome, dados)
+    return saida.getvalue()
+
+
+def test_planilha_solta_passa_direto(certificado_417):
+    assert desempacotar("Vivência 417.xlsx", certificado_417) == ([("Vivência 417.xlsx", certificado_417)], [])
+
+
+def test_zip_do_mes_anterior_vira_as_planilhas_de_dentro(certificado_417):
+    pacote = _zip({
+        "Vivência 417.xlsx": certificado_417,
+        "pasta/Vivência 631.xlsm": b"631",
+        "PDF/Vivência 417 - Outubro.pdf": b"%PDF",
+        "~$Vivência 417.xlsx": b"temporario",
+        "__MACOSX/._Vivência 417.xlsx": b"lixo",
+    })
+    planilhas, avisos = desempacotar("Certificados_Outubro_2026.zip", pacote)
+    assert [n for n, _ in planilhas] == ["Vivência 417.xlsx", "Vivência 631.xlsm"]
+    assert planilhas[0][1] == certificado_417
+    assert avisos == []
+
+
+def test_zip_sem_planilha_ou_corrompido_avisa():
+    assert desempacotar("vazio.zip", _zip({"PDF/a.pdf": b"%PDF"}))[1] == ["vazio.zip: nenhuma planilha .xlsx dentro do .zip."]
+    assert desempacotar("ruim.zip", b"nao e zip")[0] == []
+
+
+def test_ciclo_mensal_com_o_zip_baixado(arquivo_417, analises):
+    """Outubro gera o .zip; em Novembro esse mesmo .zip entra e cada planilha ganha a aba nova."""
+    coletas_novembro = [(datetime(2026, 11, 5), "Área de vivência", 417, 0, 0.3, 7.4, 1.1, "Ausente", "Ausente")]
+    analises_novembro = ler_analises(planilha_analises(COLETAS + coletas_novembro))
+    planilhas, _ = gerar_lote([svc.planejar(arquivo_417, analises, 10, 2026)])
+    (nome, conteudo), = desempacotar("Certificados_Outubro_2026.zip", zipar(planilhas))[0]
+
+    cert = svc.planejar(svc.ler_arquivo(conteudo, nome), analises_novembro, 11, 2026)
+    wb = _abrir(svc.gerar_xlsx(cert))
+    assert wb.sheetnames[:2] == ["Outubro", "Novembro"]
+    assert (wb["Novembro"]["AK6"].value, wb["Novembro"]["Y27"].value) == (3, 1.1)
